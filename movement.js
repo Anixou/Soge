@@ -19,7 +19,7 @@ export default function move(direction,target){
         target.y = target.y - target.speed;
     }
 
-    return [target.x,target.y];
+    return {x:target.x , y:target.y};
     
 }
 
@@ -27,6 +27,37 @@ export function render_movement(target, element){
 
     element.style.left = target.x+'px';
     element.style.bottom = target.y+'px';
+}
+
+export function collision(target, entities){
+
+    if(target.x <= 0){
+
+        target.touch_left = true
+        target.x = 0;
+    }
+    else target.touch_left = false;
+
+    if(target.x >= window.innerWidth-target.width){
+
+        target.touch_right = true;
+        target.x = window.innerWidth-target.width
+    }
+    else target.touch_right = false;
+
+    if(target.y <= 0){
+
+        target.touch_down = true;
+        target.y = 0;
+    }
+    else target.touch_down = false;
+    
+    if(target.y >= window.innerHeight-target.heigth){
+        
+        target.touch_up = true;
+        target.y = window.innerHeight-target.heigth
+    }
+    else target.touch_up = false;
 }
 
 
