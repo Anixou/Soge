@@ -1,12 +1,14 @@
 "use strict";
 
+import { gravity } from "./movement.js";
 import { render_movement } from "./movement.js";
 import { collision } from "./movement.js";
 import move from "./movement.js";
 
 export default class Player {
 
-    constructor(speed = 10, x = 0, y = 0,) {
+    constructor(id,speed = 10, x = 0, y = 0,) {
+        this.id = id,
         this.speed = speed,
         this.x = x,
         this.y = y,
@@ -19,26 +21,28 @@ export default class Player {
         this.collision_active = false,
         this.movement_rendering = false,
         this.movable = false
+        this.test = false;
+        this.type = 'player';
     }
 
-    create_player_element(frame,heigth=50,width=50) {
+    async create_player_element(frame,heigth=50,width=50,id="player",color) {
 
-        this.width = width;
-        this.heigth = heigth;
+        this.width = width-1;
+        this.heigth = heigth-1;
 
         const player_box = document.createElement("div");
-        player_box.id = "player";
+        player_box.id = id;
         player_box.style.width = `${this.width}px`;
         player_box.style.height = `${this.heigth}px`;
         player_box.style.position = "absolute";
-        player_box.style.backgroundColor = `red`;
+        player_box.style.backgroundColor = color;
         player_box.style.left = `${this.x}px`;
         player_box.style.bottom = `${this.y}px`;
 
         frame.append(player_box);
     }
 
-    set_player_movement(entities){
+    async set_player_movement(entities){
         
         let key_pressed = {
             up : false,
@@ -46,7 +50,7 @@ export default class Player {
             left : false,
             right : false
         }
-    
+
         addEventListener("keydown", (e)=> {
     
             if (e.key === "ArrowRight")key_pressed.right = true;
@@ -62,20 +66,21 @@ export default class Player {
             if (e.key === "ArrowDown")key_pressed.down = false;
         });
     
-        this.movable = setInterval(()=>{
+        this.movable = setInterval(async ()=>{
             if(key_pressed.right && !this.touch_right){
-                let new_co = move('right',this);
-                this.x = new_co.x;
-                this.y = new_co.y;
-                entities.player.x = new_co.x; 
-                entities.player.y = new_co.y;
+                await move('right', this)
+                .then(()=>{
+                    let index = entities.findIndex((e)=>e.id === this.id);
+                    entities[index] = this;
+                });
+                
             } 
             if(key_pressed.left && !this.touch_left){
-                let new_co = move('left',this);
-                this.x = new_co.x;
-                this.y = new_co.y;
-                entities.player.x = new_co.x; 
-                entities.player.y = new_co.y;
+                await move('left', this)
+                .then(()=>{
+                    let index = entities.findIndex((e)=>e.id === this.id);
+                    entities[index] = this;
+                });
             } 
 
             
@@ -83,14 +88,14 @@ export default class Player {
         },10)
     }
 
-    render_player_movement(element){
+    async render_player_movement(element){
         this.movement_rendering = setInterval(()=>{
             render_movement(this,element);
         },10)
         
     }
 
-    active_collision(entities){
+    async active_collision(entities){
         this.collision_active = setInterval(()=>{
 
             collision(this,entities);
@@ -98,4 +103,19 @@ export default class Player {
         },10)
         
     }
+
+    async unset_player_movement(){
+        clearInterval(this.movable);
+        this.movable = false;
+    }
+
+    async active_gravity(force){
+        this.gravity_active = setInterval(()=>{
+            if (!this.is_jumping && !this.touch_down)
+            {
+                gravity(this, force);
+            }
+        },100)
+    }
+
 }
