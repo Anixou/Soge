@@ -1,13 +1,14 @@
 "use strict";
 
 import Game from "./game.js";
+import { check_collision } from "./movement.js";
 import Player from "./player.js";
 
-let spawn_param = {
-    x:620,
-    y:60,
+const spawn_param = {
+    x:0,
+    y:0,
     id:1,
-    speed:1,
+    speed:5,
     width:50,
     heigth:50,
     color:'red',
@@ -35,14 +36,14 @@ player.active_collision(game.entities);
 
 player.render_player_movement(player_box);
 
-let player2 = new Player(2,1,620,0);
+let player2 = new Player(2,1,50,30);
 game.entities.push(player2);
 player2.create_player_element(frame,40,50,'test',"blue")
 let player_box2 = document.getElementById("test");
 player2.active_collision(game.entities);
 player2.render_player_movement(player_box2);
 
-player.active_gravity(2);
+// player.active_gravity(2);
 
 
 // let player3 = new Player(3,1,750,0);
@@ -53,5 +54,8 @@ player.active_gravity(2);
 // player3.render_player_movement(player_box3);
 
 addEventListener("keydown", (e)=>{
-    if (e.key === "t")console.log(player,game.entities);
+    if (e.key === "t"){
+        console.log(player,player2);
+        check_collision(player, player2).then(e => console.log(e));
+    };
 })

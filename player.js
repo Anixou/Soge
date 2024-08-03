@@ -1,8 +1,9 @@
 "use strict";
 
-import { gravity } from "./movement.js";
+import { fix_collision, gravity } from "./movement.js";
 import { render_movement } from "./movement.js";
-import { collision } from "./movement.js";
+import { check_collision } from "./movement.js";
+import { check_collision_all_entities } from "./movement.js";
 import move from "./movement.js";
 
 export default class Player {
@@ -12,10 +13,6 @@ export default class Player {
         this.speed = speed,
         this.x = x,
         this.y = y,
-        this.touch_down = false,
-        this.touch_up = false,
-        this.touch_left = false,
-        this.touch_right = false,
         this.is_falling = false,
         this.is_jumping = false,
         this.collision_active = false,
@@ -25,10 +22,15 @@ export default class Player {
         this.type = 'player';
     }
 
-    async create_player_element(frame,heigth=50,width=50,id="player",color) {
+    async create_player_element(frame,heigth=50,width=50,id="player",color='red') {
 
-        this.width = width-1;
-        this.heigth = heigth-1;
+        this.width = width;
+        this.heigth = heigth;
+
+        this.width_co = this.x + width-1;
+        this.heigth_co = this.y + heigth-1;
+
+        this.css_id = id;
 
         const player_box = document.createElement("div");
         player_box.id = id;
@@ -67,20 +69,58 @@ export default class Player {
         });
     
         this.movable = setInterval(async ()=>{
-            if(key_pressed.right && !this.touch_right){
+            if(key_pressed.right){
+
                 await move('right', this)
-                .then(()=>{
-                    let index = entities.findIndex((e)=>e.id === this.id);
-                    entities[index] = this;
-                });
-                
+
+                    if (this.collision_active)
+                    {
+                        let collision = await check_collision_all_entities(this, entities);
+
+                        if(collision){
+                            
+                            await move('left', this);
+                            await fix_collision(this, entities, 'right');
+
+                        }
+
+                        let index = entities.findIndex((e)=>e.id === this.id);
+                        entities[index] = this;
+                        render_movement(this);
+
+                    }
+                    else {
+                        let index = entities.findIndex((e)=>e.id === this.id);
+                            entities[index] = this;
+                            render_movement(this);
+                    }
+                    
             } 
-            if(key_pressed.left && !this.touch_left){
+            if(key_pressed.left){
+
                 await move('left', this)
-                .then(()=>{
-                    let index = entities.findIndex((e)=>e.id === this.id);
-                    entities[index] = this;
-                });
+
+                    if (this.collision_active)
+                    {
+                        let collision = await check_collision_all_entities(this, entities)
+
+                        if(collision){
+                            
+                            await move('right', this);
+                            await fix_collision(this, entities, 'left');
+
+                        }
+
+                        let index = entities.findIndex((e)=>e.id === this.id);
+                        entities[index] = this;
+                        render_movement(this);
+
+                    }
+                    else {
+                        let index = entities.findIndex((e)=>e.id === this.id);
+                            entities[index] = this;
+                            render_movement(this);
+                    }
             } 
 
             
@@ -88,20 +128,13 @@ export default class Player {
         },10)
     }
 
-    async render_player_movement(element){
-        this.movement_rendering = setInterval(()=>{
-            render_movement(this,element);
-        },10)
+    async render_player_movement(){
+        this.movement_rendering = true;
         
     }
 
-    async active_collision(entities){
-        this.collision_active = setInterval(()=>{
-
-            collision(this,entities);
-
-        },10)
-        
+    active_collision(){
+        this.collision_active = true;
     }
 
     async unset_player_movement(){
@@ -115,7 +148,7 @@ export default class Player {
             {
                 gravity(this, force);
             }
-        },100)
+        },10)
     }
 
 }
