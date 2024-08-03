@@ -1,6 +1,6 @@
 "use strict";
 
-import { fix_collision, gravity } from "./movement.js";
+import { fix_collision, gravity, move_test } from "./movement.js";
 import { render_movement } from "./movement.js";
 import { check_collision } from "./movement.js";
 import { check_collision_all_entities } from "./movement.js";
@@ -22,20 +22,20 @@ export default class Player {
         this.type = 'player';
     }
 
-    async create_player_element(frame,heigth=50,width=50,id="player",color='red') {
+    async create_player_element(frame,height=50,width=50,id="player",color='red') {
 
         this.width = width;
-        this.heigth = heigth;
+        this.height = height;
 
         this.width_co = this.x + width-1;
-        this.heigth_co = this.y + heigth-1;
+        this.height_co = this.y + height-1;
 
         this.css_id = id;
 
         const player_box = document.createElement("div");
         player_box.id = id;
         player_box.style.width = `${this.width}px`;
-        player_box.style.height = `${this.heigth}px`;
+        player_box.style.height = `${this.height}px`;
         player_box.style.position = "absolute";
         player_box.style.backgroundColor = color;
         player_box.style.left = `${this.x}px`;
@@ -73,57 +73,49 @@ export default class Player {
 
                 await move('right', this)
 
-                    if (this.collision_active)
-                    {
-                        let collision = await check_collision_all_entities(this, entities);
+                if (this.collision_active)
+                {
+                    let collision = await check_collision_all_entities(this, entities);
 
-                        if(collision){
-                            
-                            await move('left', this);
-                            await fix_collision(this, entities, 'right');
-
-                        }
-
-                        let index = entities.findIndex((e)=>e.id === this.id);
-                        entities[index] = this;
-                        render_movement(this);
+                    if(collision){
+                        
+                        await move('left', this);
+                        await fix_collision(this, entities, 'right');
 
                     }
-                    else {
-                        let index = entities.findIndex((e)=>e.id === this.id);
-                            entities[index] = this;
-                            render_movement(this);
-                    }
+
+                    let index = entities.findIndex((e)=>e.id === this.id);
+                    entities[index] = this;
+                }
+
+                let index = entities.findIndex((e)=>e.id === this.id);
+                entities[index] = this;
+                
                     
             } 
             if(key_pressed.left){
 
                 await move('left', this)
 
-                    if (this.collision_active)
-                    {
-                        let collision = await check_collision_all_entities(this, entities)
+                if (this.collision_active)
+                {
+                    let collision = await check_collision_all_entities(this, entities)
 
-                        if(collision){
-                            
-                            await move('right', this);
-                            await fix_collision(this, entities, 'left');
-
-                        }
-
-                        let index = entities.findIndex((e)=>e.id === this.id);
-                        entities[index] = this;
-                        render_movement(this);
+                    if(collision){
+                        
+                        await move('right', this);
+                        await fix_collision(this, entities, 'left');
 
                     }
-                    else {
-                        let index = entities.findIndex((e)=>e.id === this.id);
-                            entities[index] = this;
-                            render_movement(this);
-                    }
+                }
+
+                let index = entities.findIndex((e)=>e.id === this.id);
+                entities[index] = this;
+                
             } 
 
             
+            render_movement(this);
 
         },10)
     }
@@ -142,12 +134,34 @@ export default class Player {
         this.movable = false;
     }
 
-    async active_gravity(force){
-        this.gravity_active = setInterval(()=>{
-            if (!this.is_jumping && !this.touch_down)
+    async active_gravity(force,entities){
+        this.gravity_active = setInterval( async ()=>{
+            if (!this.is_jumping)
             {
+                console.log(this.y);
                 gravity(this, force);
-            }
+
+                if (this.collision_active)
+                    {
+                        let collision = await check_collision_all_entities(this, entities);
+    
+                        if(collision){
+                            
+                            await move_test('top', this, force);
+                            await fix_collision(this, entities, 'down');
+    
+                        }
+    
+                        let index = entities.findIndex((e)=>e.id === this.id);
+                        entities[index] = this;
+    
+                    }
+                    
+                    let index = entities.findIndex((e)=>e.id === this.id);
+                    entities[index] = this;
+                }
+            
+            render_movement(this);
         },10)
     }
 

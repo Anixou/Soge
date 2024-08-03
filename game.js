@@ -14,7 +14,12 @@ export default class Game {
 
     set_entities_list()
     {
-        this.entities = [];
+        this.entities = [{
+            id: "ground",
+            x: 0,
+            width: 0,
+            heigth: 0,
+        }];
     }
 }
 

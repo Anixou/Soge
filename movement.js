@@ -20,7 +20,7 @@ export default async function move(direction,target){
     }
 
     target.width_co = target.x + target.width-1;
-    target.heigth_co = target.y + target.heigth-1;
+    target.height_co = target.y + target.height-1;
 
 }
 
@@ -46,7 +46,7 @@ export async function move_test(direction, target, speed = 1){
     }
 
     target.width_co = target.x + target.width-1;
-    target.heigth_co = target.y + target.heigth-1;
+    target.height_co = target.y + target.height-1;
 }
 
 export function render_movement(target){
@@ -59,7 +59,7 @@ export function render_movement(target){
 
 export async function check_collision(target, entitie){
 
-    if (target.x > entitie.width_co || target.y > entitie.height_co || target.width_co < entitie.x || target.height_co < entitie.y)
+    if (target.x > entitie.width_co || target.y > entitie.height_co || target.width_co < entitie.x || target.height_co < entitie.y || !entitie.collision_active)
         return false;
     else return true;
 
@@ -80,6 +80,8 @@ export async function fix_collision(target, entities, direction) {
 
     if (direction === 'right') opposite = 'left';
     if (direction === 'left') opposite = 'right';
+    if (direction === 'up') opposite = 'down';
+    if (direction === 'down') opposite = 'up';
 
     for (let speed = 1; speed <= target.speed; speed++) {
         
@@ -88,10 +90,8 @@ export async function fix_collision(target, entities, direction) {
 
         if (collision) {
 
-            if (speed > 1) {
-                await move_test(opposite, target);
-                return;
-            }
+            await move_test(opposite, target);
+            return;
         } 
     }
 
@@ -100,7 +100,7 @@ export async function fix_collision(target, entities, direction) {
 // a voir plus tard si la collision inactive peut poser probleme
 export function gravity(entitie, force){
 
-    if (entitie.y > 0) entitie.y -= force;
+    entitie.y -= force;
     
 }
 
