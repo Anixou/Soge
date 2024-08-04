@@ -15,10 +15,33 @@ export default class Game {
     set_entities_list()
     {
         this.entities = [{
-            id: "ground",
+            id: "border_down",
             x: 0,
-            width: 0,
-            heigth: 0,
+            y: -1,
+            width_co: window.innerWidth,
+            height_co: -1,
+            collision_active: true
+        },{
+            id: "border_up",
+            x: 0,
+            y: window.innerHeight+1,
+            width_co: window.innerWidth,
+            height_co: window.innerHeight+1,
+            collision_active: true
+        },{
+            id: "border_left",
+            x: -1,
+            y: 0,
+            width_co: -1,
+            height_co: window.innerHeight,
+            collision_active: true
+        },{
+            id: "border_right",
+            x: window.innerWidth+1,
+            y: 0,
+            width_co: window.innerWidth+1,
+            height_co: window.innerHeight,
+            collision_active: true
         }];
     }
 }
