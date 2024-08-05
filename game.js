@@ -18,29 +18,29 @@ export default class Game {
             id: "border_down",
             x: 0,
             y: -1,
-            width_co: window.innerWidth,
+            width_co: Infinity,
             height_co: -1,
             collision_active: true
         },{
             id: "border_up",
             x: 0,
             y: window.innerHeight+1,
-            width_co: window.innerWidth,
+            width_co: Infinity,
             height_co: window.innerHeight+1,
             collision_active: true
         },{
             id: "border_left",
-            x: -1,
+            x: -Infinity,
             y: 0,
             width_co: -1,
-            height_co: window.innerHeight,
+            height_co:Infinity,
             collision_active: true
         },{
             id: "border_right",
             x: window.innerWidth+1,
             y: 0,
-            width_co: window.innerWidth+1,
-            height_co: window.innerHeight,
+            width_co: Infinity,
+            height_co: Infinity,
             collision_active: true
         }];
     }

@@ -112,3 +112,12 @@ export async function gravity(entitie, force){
     entitie.y -= force;
     
 }
+
+export async function immobilise(target,time)
+{
+    target.immobilised = true;
+
+    setTimeout(() =>{
+        target.immobilised = false;
+    },time)
+}
