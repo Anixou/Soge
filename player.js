@@ -7,21 +7,19 @@ import move from "./movement.js";
 
 export default class Player {
 
-    constructor(id,speed_max = 10, x = 0, y = 0,) {
+    constructor(id, x = 0, y = 0,) {
         this.id = id,
-        this.speed = 0,
-        this.speed_max = speed_max,
-        this.acceleration = 0.1,
         this.x = x,
         this.y = y,
         this.is_jumping = false,
         this.is_falling = false,
         this.collision_active = false,
         this.movement_rendering = false,
-        this.movable = false
-        this.test = false;
-        this.type = 'player';
-        this.direction = null;
+        this.movable = false,
+        this.test = false,
+        this.type = 'player',
+        this.direction = null,
+        this.is_mooving = false
     }
 
     //créer l'élément HTML du joueur
@@ -62,8 +60,13 @@ export default class Player {
     }
 
     //active les mouvements du joueur, gere l'event listener et la collision
-    async set_player_movement(entities){
+    async set_player_movement(speed_min,speed_max,speed_in_air,entities,acceleration = 0.1){
         
+        this.speed_min = speed_min;
+        this.speed_max = speed_max;
+        this.acceleration = acceleration;
+        this.speed_in_air = speed_in_air;
+
         let key_pressed = {
             up : false,
             down : false,
@@ -85,23 +88,35 @@ export default class Player {
             if (e.key === "ArrowUp")key_pressed.up = false;
             if (e.key === "ArrowDown")key_pressed.down = false;
         });
-    
-        this.movable = setInterval(async ()=>{
-            if(key_pressed.right){
 
-                console.log(this.speed);
+        this.movable = setInterval(async ()=>{
+
+            if (!key_pressed.left && !key_pressed.right && !this.is_jumping && !this.is_falling)
+            {
+                this.is_mooving = false;
+            }
+
+            if(key_pressed.right){
                 
 
-                if (this.direction === "right")
+                if (this.direction === "right" && this.is_mooving)
                 {
-                    if (this.speed < this.speed_max)this.speed += this.acceleration;
+                    if (!this.is_jumping && !this.is_falling)
+                    {
+                        this.speed += this.acceleration;
+
+                        if (this.speed >= this.speed_max) this.speed = this.speed_max;
+
+                    }
                 }
                 else{
+                    console.log('rtezr');
+                    
 
                     this.direction = "right";
-                    this.speed = 0;
+                    this.speed = this.speed_min;
+                    
                 }
-
 
                 await move('right', this)
 
@@ -113,31 +128,39 @@ export default class Player {
                         
                         await move('left', this);
                         await fix_collision(this, entities, 'right');
+                        this.speed = 0;
 
                     }
 
                 }
+
+                this.is_mooving = true;
 
                 let index = entities.findIndex((e)=>e.id === this.id);
                 entities[index] = this;
                 
                     
             } 
+
             if(key_pressed.left){
 
-                console.log(this.speed);
-                if (this.direction === "left")
+                if (this.direction === "left" && this.is_mooving)
                 {
-                    if (this.speed < this.speed_max)this.speed += this.acceleration;
+                    if (!this.is_jumping && !this.is_falling)
+                    {
+                        this.speed += this.acceleration;
+
+                        if (this.speed >= this.speed_max) this.speed = this.speed_max;
+
+                    }
                     
                 }
                 else{
 
                     this.direction = "left";
-                    this.speed = 0;
+                    this.speed = this.speed_min;
                 }
     
-
                 await move('left', this)
 
                 if (this.collision_active)
@@ -148,12 +171,15 @@ export default class Player {
                         
                         await move('right', this);
                         await fix_collision(this, entities, 'left');
+                        this.speed = 0;
 
                     }
                 }
 
-                let index = entities.findIndex((e)=>e.id === this.id);
-                entities[index] = this;
+                this.is_mooving = true;
+
+                entities[entities.findIndex((e)=>e.id === this.id)] = this;
+
                 
             } 
 
@@ -192,13 +218,20 @@ export default class Player {
     }
 
     //Active la gravité du joueur
-    async active_gravity(force,entities){
+    async active_gravity(force_max,force_min,entities){
+
+        this.gravity_force_max = force_max;
+        this.gravity_force_min = force_min; // MUST BE OVER 1
+        this.gravity_force = this.gravity_force_min;
+        this.gravity_acceleration = (force_max-force_min)/100
+        
         this.gravity_active = setInterval( async ()=>{
             if (!this.is_jumping)
             {
-                await gravity(this, force);
+                this.is_mooving = true;
                 
-                this.is_falling = true;
+                await gravity(this, this.gravity_force);
+                
 
                 if (this.collision_active)
                 {
@@ -206,15 +239,26 @@ export default class Player {
 
                     if(collision){
                         
-                        await move_test('up', this, force);
-                        await fix_collision(this, entities, 'down');
+                        this.y = collision.height_co+1;
+                        // await move_test('up', this, this.gravity_force);
+                        // await fix_collision(this, entities, 'down');
                         this.is_falling = false;
+                        this.gravity_force = this.gravity_force_min;
+                    }
+                    else {
+        
+                        this.is_falling = true;
+                        this.speed = this.speed_in_air;
+                        this.gravity_force+= this.gravity_acceleration;
+
+                        if(this.gravity_force > this.gravity_force_max) this.gravity_force = this.gravity_force_max;
+
                     }
 
                 }
                 
-                let index = entities.findIndex((e)=>e.id === this.id);
-                entities[index] = this;
+                entities[entities.findIndex((e)=>e.id === this.id)] = this;
+                
             }
             
         },10)
@@ -229,26 +273,34 @@ export default class Player {
 
         this.jump_height = height;
         this.jump_speed = speed;
+        this.jump_initial_speed = speed;
 
         addEventListener('keydown', (e => {
             if (e.key === " " && !this.is_jumping && !this.is_falling) {
 
-                
+                const progress_max = 0.95;
                 this.is_jumping = true;
                 this.jump_point = this.y + this.jump_height;
+                this.speed = this.speed_in_air;
 
 
                 let jump = setInterval(async () => {
 
+                    this.is_mooving = true;
+                    
                     if (this.y >= this.jump_point)
                     {
                         this.y = this.jump_point;
-                        let index = entities.findIndex((e)=>e.id === this.id);
-                        entities[index] = this;
+                        entities[entities.findIndex((e)=>e.id === this.id)] = this;
+
                         this.is_jumping = false;
                         clearInterval(jump);
                     }
 
+                    let progress = this.y / this.jump_height < progress_max ? this.y / this.jump_height : progress_max;
+                    
+                    this.jump_speed = this.jump_initial_speed * (1 - progress);
+                    
                     await move_test('up', this, this.jump_speed);
 
                     if (this.collision_active)
@@ -267,8 +319,7 @@ export default class Player {
     
                     }
                     
-                    let index = entities.findIndex((e)=>e.id === this.id);
-                    entities[index] = this;
+                    entities[entities.findIndex((e)=>e.id === this.id)] = this;
 
                 },10)
             }
