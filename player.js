@@ -2,13 +2,14 @@
 
 import { fix_collision, gravity, immobilise, move_test } from "./movement.js";
 import { render_movement } from "./movement.js";
-import { check_collision_all_entities } from "./movement.js";
+import { check_collision_all_entities,check_collision } from "./movement.js";
 import move from "./movement.js";
 
 export default class Player {
 
-    constructor(id, x = 0, y = 0,) {
+    constructor(id, x = 0, y = 0,life = 1) {
         this.id = id,
+        this.life = life,
         this.x = x,
         this.y = y,
         this.is_jumping = false,
@@ -21,6 +22,8 @@ export default class Player {
         this.direction = null,
         this.is_mooving = false,
         this.immobilised = false
+
+        window.globalVar.push(this)
     }
 
     //créer l'élément HTML du joueur
@@ -48,7 +51,7 @@ export default class Player {
         frame.append(player_box);
     }
 
-    async remove_player_element() {
+    async remove_player_element() {//A REVOIR
 
         try {
 
@@ -61,8 +64,9 @@ export default class Player {
     }
 
     //active les mouvements du joueur, gere l'event listener et la collision
-    async set_player_movement(speed_min,speed_max,entities,time_for_max_speed = 1000){
+    async set_player_movement(speed_min,speed_max,time_for_max_speed = 1000){
         
+        let entities = window.globalVar
         this.speed = speed_min;
         this.speed_min = speed_min;
         this.speed_max = speed_max;
@@ -98,6 +102,7 @@ export default class Player {
             if (!key_pressed.left && !key_pressed.right && !this.is_jumping && !this.is_falling)
             {
                 this.is_mooving = false;
+                this.speed = this.speed_min;
                 
             }
 
@@ -283,8 +288,9 @@ export default class Player {
     }
 
     //Active la gravité du joueur
-    async active_gravity(force_max,force_min,entities){
+    async active_gravity(force_max,force_min){
 
+        let entities = globalVar
         this.gravity_force_max = force_max;
         this.gravity_force_min = force_min; // MUST BE OVER 1
         this.gravity_force = this.gravity_force_min;
@@ -335,8 +341,9 @@ export default class Player {
         this.gravity_active = false;
     }
 
-    async set_jump(height,speed,entities){
+    async set_jump(height,speed){
 
+        let entities = globalVar
         this.jump_height = height;
         this.jump_speed = speed;
         this.jump_initial_speed = speed;
@@ -397,5 +404,49 @@ export default class Player {
 
 
     }
+
+    async die(){
+
+        let entities = globalVar
+        this.unset_player_movement();
+        this.unset_movement_rendering();
+        this.unset_collision();
+        this.remove_player_element();
+        this.clear_gravity();
+        let index = entities.findIndex((e)=>e.id === this.id)
+        if (index !== -1) entities.splice(index, 1);
+    }
+
+    async check_life(){
+
+        setInterval(async () => {
+
+            if (this.life <= 0)await this.die();
+        
+        }, 10);
+        
+    }
+    async collapsed(entitie){
+
+        const distance_x = Math.max(0, this.x - entitie.width_co, entitie.x - this.width_co);
+    
+        // Calcul de la distance verticale
+        const distance_y = Math.max(0, this.y - entitie.height_co, entitie.y - this.height_co);
+        
+        // Distance totale
+        const distance = Math.sqrt(distance_x ** 2 + distance_y ** 2);
+        return distance <= 1;
+
+    }
+
+    async teleport(x,y){
+
+        this.x = x;
+        this.y = y;
+
+        this.width_co = this.x + this.width-1;
+        this.height_co = this.y + this.height-1;
+    }
+
 
 }

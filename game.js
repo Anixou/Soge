@@ -43,7 +43,10 @@ export default class Game {
             height_co: Infinity,
             collision_active: true
         }];
+
+        window.globalVar = this.entities;
     }
+
 }
 
 
