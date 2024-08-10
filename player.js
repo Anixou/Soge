@@ -1,34 +1,38 @@
 "use strict";
 
-import { fix_collision, gravity, immobilise, move_test } from "./movement.js";
+import { detect_collapse,detect_collapse_all_entities, fix_collision, gravity, immobilise, move_test } from "./movement.js";
 import { render_movement } from "./movement.js";
-import { check_collision_all_entities,check_collision } from "./movement.js";
+import { check_collision_all_entities } from "./movement.js";
 import move from "./movement.js";
 
 export default class Player {
 
     constructor(id, x = 0, y = 0) {
-        this.id = id,
-        this.alive = true,
-        this.x = x,
-        this.y = y,
-        this.is_jumping = false,
-        this.is_falling = false,
-        this.collision_active = false,
-        this.movement_rendering = false,
-        this.movable = false,
-        this.test = false,
-        this.type = 'player',
-        this.direction = null,
-        this.is_mooving = false,
-        this.immobilised = false,
-        this.immobilise_on_fall = true
+        this.id = id;
+        this.alive = true;
+        this.x = x;
+        this.y = y;
+        this.is_jumping = false;
+        this.is_falling = false;
+        this.collision_active = false;
+        this.movement_rendering = false;
+        this.movable = false;
+        this.type = 'player';
+        this.direction = null;
+        this.is_mooving = false;
+        this.immobilised = false;
+        this.immobilise_on_fall = true;
+        this.collision_exceptions = []
 
         window.globalVar.push(this)
     }
 
+    async save() {
+        globalVar[globalVar.findIndex((e)=>e.id === this.id)] = this;
+    }
+
     //créer l'élément HTML du joueur
-    async create_player_element(height=50,width=50,id="player",color='red') {
+    async create_element(height=50,width=50,id,color='red') {
 
         this.width = width;
         this.height = height;
@@ -52,7 +56,7 @@ export default class Player {
         frame.append(player_box);
     }
 
-    async remove_player_element() {//A REVOIR
+    async remove_element() {//A REVOIR
 
         try {
 
@@ -65,7 +69,7 @@ export default class Player {
     }
 
     //active les mouvements du joueur, gere l'event listener et la collision
-    async set_player_movement(speed_min,speed_max,time_for_max_speed = 1000){
+    async set_movement(speed_min,speed_max,time_for_max_speed = 1000){
         
         let entities = window.globalVar
         this.speed = speed_min;
@@ -98,175 +102,169 @@ export default class Player {
 
         this.movable = setInterval(async ()=>{
 
-            
-
             if (!key_pressed.left && !key_pressed.right && !this.is_jumping && !this.is_falling)
-            {
-                this.is_mooving = false;
-                this.speed = this.speed_min;
-                
-            }
-
-            if(key_pressed.right && !this.immobilised){
-                
-                if (this.direction === "right" && this.is_mooving)
                 {
-                    if (!this.is_jumping && !this.is_falling)
-                    {
-                        this.speed += this.acceleration;
-
-                        if (this.speed >= this.speed_max) this.speed = this.speed_max;
-
-                    }
-                }
-                else if (this.is_falling || this.is_jumping)
-                {
-                }
-                else{
-
-                    this.direction = "right";
+                    this.is_mooving = false;
                     this.speed = this.speed_min;
                     
                 }
-
-                if (this.speed >= this.width)
-                {
-                    let parts = this.speed/this.width+1
-                    let temp_speed = this.speed/parts;
-
-
-                    for (let i = 0; i < parts; i++)
+    
+                if(key_pressed.right && !this.immobilised && !await detect_collapse_all_entities(this, globalVar)){
+                    
+                    if (this.direction === "right" && this.is_mooving)
                     {
-                        await move_test('right', this, temp_speed)
-
+                        if (!this.is_jumping && !this.is_falling)
+                        {
+                            this.speed += this.acceleration;
+    
+                            if (this.speed >= this.speed_max) this.speed = this.speed_max;
+    
+                        }
+                    }
+                    else if (this.is_falling || this.is_jumping)
+                    {
+                    }
+                    else{
+    
+                        this.direction = "right";
+                        this.speed = this.speed_min;
+                        
+                    }
+    
+                    if (this.speed >= this.width)
+                    {
+                        let parts = this.speed/this.width+1
+                        let temp_speed = this.speed/parts;
+    
+    
+                        for (let i = 0; i < parts; i++)
+                        {
+                            await move_test('right', this, temp_speed)
+    
+                            if (this.collision_active)
+                            {
+                                let collision = await check_collision_all_entities(this, entities);
+    
+                                if(collision){
+                                    
+                                    await move_test('left', this, temp_speed);
+                                    await fix_collision(this, entities, 'right');
+    
+                                }
+    
+                            }
+                        }
+                    }
+                    
+                    else {
+    
+                        await move('right', this)
+    
                         if (this.collision_active)
                         {
                             let collision = await check_collision_all_entities(this, entities);
-
+        
                             if(collision){
                                 
-                                await move_test('left', this, temp_speed);
+                                await move('left', this);
                                 await fix_collision(this, entities, 'right');
-
+        
                             }
-
+        
                         }
                     }
-                }
-                
-                else {
-
-                    await move('right', this)
-
-                    if (this.collision_active)
-                    {
-                        let collision = await check_collision_all_entities(this, entities);
     
-                        if(collision){
-                            
-                            await move('left', this);
-                            await fix_collision(this, entities, 'right');
+                    this.is_mooving = true;
+    
+                    let index = entities.findIndex((e)=>e.id === this.id);
+                    entities[index] = this;
+                    
+                        
+                } 
+    
+                if(key_pressed.left && !this.immobilised && !await detect_collapse_all_entities(this, globalVar)){
+    
+                    if (this.direction === "left" && this.is_mooving)
+                    {
+                        if (!this.is_jumping && !this.is_falling)
+                        {
+                            this.speed += this.acceleration;
+    
+                            if (this.speed >= this.speed_max) this.speed = this.speed_max;
     
                         }
+                        
+                    }
+                    else if (this.is_falling || this.is_jumping)
+                    {
+                        
+                    }
+                    else{
     
+                        this.direction = "left";
+                        this.speed = this.speed_min;
                     }
-                }
-
-                this.is_mooving = true;
-
-                let index = entities.findIndex((e)=>e.id === this.id);
-                entities[index] = this;
-                
-                    
-            } 
-
-            if(key_pressed.left && !this.immobilised){
-
-                if (this.direction === "left" && this.is_mooving)
-                {
-                    if (!this.is_jumping && !this.is_falling)
+    
+                    if (this.speed >= this.width)
                     {
-                        this.speed += this.acceleration;
-
-                        if (this.speed >= this.speed_max) this.speed = this.speed_max;
-
+                        let parts = this.speed/this.width+1
+                        let temp_speed = this.speed/parts;
+    
+    
+                        for (let i = 0; i < parts; i++)
+                        {
+                            await move_test('left', this, temp_speed)
+    
+                            if (this.collision_active)
+                            {
+                                let collision = await check_collision_all_entities(this, entities);
+    
+                                if(collision){
+                                    
+                                    await move_test('right', this, temp_speed);
+                                    await fix_collision(this, entities, 'left');
+    
+                                }
+    
+                            }
+                        }
                     }
-                    
-                }
-                else if (this.is_falling || this.is_jumping)
-                {
-                    
-                }
-                else{
-
-                    this.direction = "left";
-                    this.speed = this.speed_min;
-                }
-
-                if (this.speed >= this.width)
-                {
-                    let parts = this.speed/this.width+1
-                    let temp_speed = this.speed/parts;
-
-
-                    for (let i = 0; i < parts; i++)
-                    {
-                        await move_test('left', this, temp_speed)
-
+    
+                    else {
+    
+                        await move('left', this)
+    
                         if (this.collision_active)
                         {
-                            let collision = await check_collision_all_entities(this, entities);
-
+                            let collision = await check_collision_all_entities(this, entities)
+    
                             if(collision){
                                 
-                                await move_test('right', this, temp_speed);
+                                await move('right', this);
                                 await fix_collision(this, entities, 'left');
-
-                            }
-
-                        }
-                    }
-                }
-
-                else {
-
-                    await move('left', this)
-
-                    if (this.collision_active)
-                    {
-                        let collision = await check_collision_all_entities(this, entities)
-
-                        if(collision){
-                            
-                            await move('right', this);
-                            await fix_collision(this, entities, 'left');
-
-                        }
-                    }
-                }
     
-                
-
-                this.is_mooving = true;
-
-                entities[entities.findIndex((e)=>e.id === this.id)] = this;
-
-                
-            } 
-
-        },10)
+                            }
+                        }
+                    }
+    
+                    this.is_mooving = true;
+    
+                    entities[entities.findIndex((e)=>e.id === this.id)] = this;
+                } 
+    
+            },10)
     }
 
 
     //desactive les mouvements du joueur
-    async unset_player_movement(){
+    async unset_movement(){
         clearInterval(this.movable);
         this.movable = false;
     }
 
     
     //active le rendu visuel des mouvements
-    async render_player_movement(){
+    async render_movement(){
         this.movement_rendering = setInterval( async () => {
             render_movement(this);
         },1);
@@ -280,11 +278,26 @@ export default class Player {
 
     //Active les collision du joueur
     active_collision(){
-        this.collision_active = true;
+        this.collision_active = setInterval( async () => {
+            const collapse = await detect_collapse_all_entities(this,globalVar);
+            if (collapse.direction === 'right')
+            {
+                this.x = collapse.entitie.x-this.width;
+                this.width_co = this.x + this.width-1;
+            }
+            if (collapse.direction === 'left')
+            {
+                this.x = collapse.entitie.width_co+1;
+                this.width_co = this.x + this.width-1;
+            }
+            
+            this.save();
+        }, 10);
     }
 
     //desactive les collision du joueur
     async unset_collision(){
+        clearInterval(this.collision_active);
         this.collision_active = false;
     }
 
@@ -360,7 +373,7 @@ export default class Player {
                 const start_point = this.y
 
                 this.is_jumping = true;
-                this.jump_point = this.y + this.jump_height;
+                this.jump_point = start_point + this.jump_height;
                 
 
 
@@ -412,12 +425,12 @@ export default class Player {
 
     async die(){
 
-        let entities = globalVar
-        this.life = 0;
-        this.unset_player_movement();
+        let entities = globalVar;
+        this.alive = false;
+        this.unset_movement();
         this.unset_movement_rendering();
         this.unset_collision();
-        this.remove_player_element();
+        this.remove_element();
         this.clear_gravity();
         let index = entities.findIndex((e)=>e.id === this.id)
         if (index !== -1) entities.splice(index, 1);
@@ -434,14 +447,7 @@ export default class Player {
     // }
     async collapsed(entitie){
 
-        const distance_x = Math.max(0, this.x - entitie.width_co, entitie.x - this.width_co);
-    
-        // Calcul de la distance verticale
-        const distance_y = Math.max(0, this.y - entitie.height_co, entitie.y - this.height_co);
-        
-        // Distance totale
-        const distance = Math.sqrt(distance_x ** 2 + distance_y ** 2);
-        return distance <= 1;
+        return await detect_collapse(this, entitie)
 
     }
 
@@ -454,5 +460,13 @@ export default class Player {
         this.height_co = this.y + this.height-1;
     }
 
-
+    async add_collision_exception(exception)
+    {
+        this.collision_exceptions.push(exception);
+    }
+    async remove_collision_exception(exception)
+    {
+        let index = this.collision_exceptions.indexOf(exception);
+        if (index!== -1) this.collision_exceptions.splice(index, 1);
+    }
 }

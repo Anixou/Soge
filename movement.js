@@ -75,7 +75,7 @@ export async function check_collision_all_entities(target,entities)
     
     for (let i = 0; i < entities.length; i++)
     {
-        if (entities[i].id!= target.id && await check_collision(target, entities[i]))
+        if (entities[i].id!= target.id && await check_collision(target, entities[i]) && !target.collision_exceptions.some(e=>e.id===entities[i].id))
             return entities[i];
     }
     return false;
@@ -120,4 +120,42 @@ export async function immobilise(target,time)
     setTimeout(() =>{
         target.immobilised = false;
     },time)
+}
+
+export async function detect_collapse(target, entitie) {
+    // Vérification de la collision sur l'axe X
+    const collisionX = target.x <= entitie.width_co+1 && target.width_co >= entitie.x-1;
+
+    // Vérification de la collision sur l'axe Y
+    const collisionY = target.y <= entitie.height_co+1 && target.height_co >= entitie.y-1;
+
+    if (collisionX && collisionY) {
+        // Déterminer le côté de la collision
+        const overlapRight = target.width_co - entitie.x;
+        const overlapLeft = entitie.width_co - target.x;
+        const overlapTop = target.height_co - entitie.y;
+        const overlapBottom = entitie.height_co - target.y;
+
+        const smallestOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+
+        if (smallestOverlap === overlapLeft) return "left";
+        if (smallestOverlap === overlapRight) return "right";
+        if (smallestOverlap === overlapTop) return "top";
+        if (smallestOverlap === overlapBottom) return "down";
+    }
+
+    return false; // Pas de collision
+}
+
+export async function detect_collapse_all_entities(target,entities)
+{
+    for (let i = 0; i < entities.length; i++)
+    {
+        if (entities[i].id!= target.id && entities[i].type != 'world' && await detect_collapse(target, entities[i]))
+        {
+            return {direction : await detect_collapse(target,entities[i]), entitie : entities[i]};
+        }
+    }
+
+    return false
 }
