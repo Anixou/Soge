@@ -5,13 +5,12 @@ import { check_collision, check_collision_all_entities } from "./movement.js";
 import Player from "./player.js";
 
 const spawn_param = {
-    x:700,
+    x:500,
     y:0,
     id:1,
-    life:1,
     speed_min:1,
-    speed_max:5,
-    time_for_max_speed:500,
+    speed_max:10,
+    time_for_max_speed:1000,
     width:50,
     height:50,
     color:'red',
@@ -19,8 +18,7 @@ const spawn_param = {
     gravity_max:20,
     gravity_min:1,
     jump_speed:50,
-    jump_height: 200,
-    speed_in_air : 5
+    jump_height: 200
 }
 
 let game = new Game;
@@ -28,7 +26,7 @@ let game = new Game;
 game.add_frame();
 game.set_entities_list();
 
-let player = new Player(spawn_param.id,spawn_param.x,spawn_param.y, spawn_param.life);
+let player = new Player(spawn_param.id,spawn_param.x,spawn_param.y);
 player.create_player_element(spawn_param.height,spawn_param.width,spawn_param.css_id,spawn_param.color);
 player.render_player_movement();
 player.set_player_movement(spawn_param.speed_min,spawn_param.speed_max,spawn_param.time_for_max_speed);
@@ -45,7 +43,7 @@ player2.active_gravity(spawn_param.gravity_max,spawn_param.gravity_min);
 setInterval(async()=>{
     if (await player.collapsed(player2))
     {
-        player.die();
+        console.log('collapsed4')
     }
 },10)
 

@@ -7,9 +7,9 @@ import move from "./movement.js";
 
 export default class Player {
 
-    constructor(id, x = 0, y = 0,life = 1) {
+    constructor(id, x = 0, y = 0) {
         this.id = id,
-        this.life = life,
+        this.alive = true,
         this.x = x,
         this.y = y,
         this.is_jumping = false,
@@ -21,7 +21,8 @@ export default class Player {
         this.type = 'player',
         this.direction = null,
         this.is_mooving = false,
-        this.immobilised = false
+        this.immobilised = false,
+        this.immobilise_on_fall = true
 
         window.globalVar.push(this)
     }
@@ -71,7 +72,7 @@ export default class Player {
         this.speed_min = speed_min;
         this.speed_max = speed_max;
         this.time_for_max_speed = time_for_max_speed;
-        this.acceleration = (this.speed_max - this.speed_min)/this.time_for_max_speed*10;// division par 10 car setinterval de 10 miliisecondes
+        this.acceleration = (this.speed_max - this.speed_min)/this.time_for_max_speed*10;// fois 10 car setinterval de 10 miliisecondes
 
         let key_pressed = {
             up : false,
@@ -310,8 +311,12 @@ export default class Player {
                     if(collision){
                         
                         this.y = collision.height_co+1;
+                        this.height_co = this.y + this.height-1;
                         
-                        if(this.is_falling)await immobilise(this,50);
+                        if (this.immobilise_on_fall)
+                        {
+                            if(this.is_falling)await immobilise(this,50);
+                        }
                         // await move_test('up', this, this.gravity_force);
                         // await fix_collision(this, entities, 'down');
                         this.is_falling = false;
@@ -408,6 +413,7 @@ export default class Player {
     async die(){
 
         let entities = globalVar
+        this.life = 0;
         this.unset_player_movement();
         this.unset_movement_rendering();
         this.unset_collision();
@@ -417,15 +423,15 @@ export default class Player {
         if (index !== -1) entities.splice(index, 1);
     }
 
-    async check_life(){
+    // async check_life(){
 
-        setInterval(async () => {
+    //     setInterval(async () => {
 
-            if (this.life <= 0)await this.die();
+    //         if (this.life <= 0)await this.die();
         
-        }, 10);
+    //     }, 10);
         
-    }
+    // }
     async collapsed(entitie){
 
         const distance_x = Math.max(0, this.x - entitie.width_co, entitie.x - this.width_co);
