@@ -116,6 +116,7 @@ export async function gravity(entitie, force){
 export async function immobilise(target,time)
 {
     target.immobilised = true;
+    target.is_mooving = false;
 
     setTimeout(() =>{
         target.immobilised = false;
@@ -137,10 +138,10 @@ export async function detect_collapse(target, entitie) {
         const overlapBottom = entitie.height_co - target.y;
 
         const smallestOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-
+        
         if (smallestOverlap === overlapLeft) return "left";
         if (smallestOverlap === overlapRight) return "right";
-        if (smallestOverlap === overlapTop) return "top";
+        if (smallestOverlap === overlapTop) return "up";
         if (smallestOverlap === overlapBottom) return "down";
     }
 
@@ -151,7 +152,7 @@ export async function detect_collapse_all_entities(target,entities)
 {
     for (let i = 0; i < entities.length; i++)
     {
-        if (entities[i].id!= target.id && entities[i].type != 'world' && await detect_collapse(target, entities[i]))
+        if (entities[i].id!= target.id && entities[i].type != 'world' && entities[i].collision_active && await detect_collapse(target, entities[i]))
         {
             return {direction : await detect_collapse(target,entities[i]), entitie : entities[i]};
         }

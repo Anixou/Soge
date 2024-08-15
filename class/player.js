@@ -1,9 +1,9 @@
 "use strict";
 
-import { detect_collapse,detect_collapse_all_entities, fix_collision, gravity, immobilise, move_test } from "./movement.js";
-import { render_movement } from "./movement.js";
-import { check_collision_all_entities } from "./movement.js";
-import move from "./movement.js";
+import { detect_collapse,detect_collapse_all_entities, fix_collision, gravity, immobilise, move_test } from "../movement.js";
+import { render_movement } from "../movement.js";
+import { check_collision_all_entities } from "../movement.js";
+import move from "../movement.js";
 
 export default class Player {
 
@@ -22,7 +22,8 @@ export default class Player {
         this.is_mooving = false;
         this.immobilised = false;
         this.immobilise_on_fall = true;
-        this.collision_exceptions = []
+        this.immobilise_time = 50;
+        this.collision_exceptions = [];
 
         window.globalVar.push(this)
     }
@@ -41,6 +42,7 @@ export default class Player {
         this.height_co = this.y + height-1;
 
         this.css_id = id;
+        this.color = color;
 
         const frame = document.getElementById("frame");
 
@@ -109,7 +111,7 @@ export default class Player {
                     
                 }
     
-                if(key_pressed.right && !this.immobilised && !await detect_collapse_all_entities(this, globalVar)){
+                if(key_pressed.right && !this.immobilised && await detect_collapse_all_entities(this, globalVar) !== 'right'){
                     
                     if (this.direction === "right" && this.is_mooving)
                     {
@@ -182,7 +184,7 @@ export default class Player {
                         
                 } 
     
-                if(key_pressed.left && !this.immobilised && !await detect_collapse_all_entities(this, globalVar)){
+                if(key_pressed.left && !this.immobilised && await detect_collapse_all_entities(this, globalVar) !== 'left'){
     
                     if (this.direction === "left" && this.is_mooving)
                     {
@@ -277,7 +279,7 @@ export default class Player {
     }
 
     //Active les collision du joueur
-    active_collision(){
+    async active_collision(){
         this.collision_active = setInterval( async () => {
             const collapse = await detect_collapse_all_entities(this,globalVar);
             if (collapse.direction === 'right')
@@ -328,7 +330,7 @@ export default class Player {
                         
                         if (this.immobilise_on_fall)
                         {
-                            if(this.is_falling)await immobilise(this,50);
+                            if(this.is_falling)await immobilise(this,this.immobilise_time);
                         }
                         // await move_test('up', this, this.gravity_force);
                         // await fix_collision(this, entities, 'down');
@@ -345,6 +347,14 @@ export default class Player {
 
                     }
 
+                }
+                else
+                {
+                    this.is_falling = true;
+                    this.is_mooving = true;
+                    this.gravity_force+= this.gravity_acceleration;
+
+                    if(this.gravity_force > this.gravity_force_max) this.gravity_force = this.gravity_force_max;
                 }
                 
                 entities[entities.findIndex((e)=>e.id === this.id)] = this;

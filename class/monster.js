@@ -1,14 +1,14 @@
-import move from './movement.js';
 import Player from './player.js';
+import move from '../movement.js';
 
-export default class Structure extends Player
+export default class Monster extends Player
 {
     constructor(id, x=0, y=0)
     {
         super(id, x, y);
-        this.collision_active = true,
+        this.collision_active = false,
         this.is_jumping = null;
-        this.type ='structure';
+        this.type ='monster';
         this.immobilised = null;
         this.immobilise_on_fall = null;
         globalVar[globalVar.findIndex((e)=>e.id === this.id)] = this;
@@ -22,6 +22,7 @@ export default class Structure extends Player
     set_movement(){
         this.#error();
     }
+
     unset_movement(){
         this.#error();
     }
@@ -29,20 +30,20 @@ export default class Structure extends Player
     set_jump(){
         this.#error();
     }
+
     unset_jump(){
         this.#error();
     }
-    
-    async break(){
-        this.die();
-    }
 
-    active_collision(){
-        this.#error();
-    }
-
-    unset_collision(){
-        this.#error();
+    async die(){
+        let entities = globalVar;
+        this.alive = false;
+        this.unset_movement_rendering();
+        this.unset_collision();
+        this.remove_element();
+        this.clear_gravity();
+        let index = entities.findIndex((e)=>e.id === this.id)
+        if (index !== -1) entities.splice(index, 1);
     }
 
     async move(distance,speed,direction)
@@ -65,10 +66,7 @@ export default class Structure extends Player
             }
             move(direction,this);
             progress += this.speed;
-            globalVar[globalVar.findIndex((e)=>e.id === this.id)] = this;
-
+            this.save();
         },10)
     }
-
-
 }

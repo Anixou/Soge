@@ -1,6 +1,6 @@
 export default class Game {
 
-    add_frame(heigth = "100vh",width = "100%"){
+    async add_frame(heigth = "100vh",width = "100%"){
 
         const frame = document.createElement("div");
         frame.id = "frame";
@@ -11,8 +11,16 @@ export default class Game {
         document.body.appendChild(frame);
 
     }
+    
+    async clear_frame()
+    {
+        for (let i = globalVar.length-1; i >= 0 ; i--) {
+            if (globalVar[i].type !== 'world')
+                globalVar[i].die();
+        }
+    }
 
-    set_entities_list()
+    async set_entities_list()
     {
         this.entities = [{
             id: "border_down",
