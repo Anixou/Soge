@@ -61,8 +61,6 @@ export function render_movement(target){
 //verification de la collision entre deux elements
 export async function check_collision(target, entitie){
 
-    // console.log(target, entitie)
-
     if (target.x > entitie.width_co || target.y > entitie.height_co || target.width_co < entitie.x || target.height_co < entitie.y || !entitie.collision_active)
         return false;
     else return true;
@@ -138,7 +136,7 @@ export async function detect_collapse(target, entitie) {
         const overlapBottom = entitie.height_co - target.y;
 
         const smallestOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
-        
+
         if (smallestOverlap === overlapLeft) return "left";
         if (smallestOverlap === overlapRight) return "right";
         if (smallestOverlap === overlapTop) return "up";
@@ -150,13 +148,17 @@ export async function detect_collapse(target, entitie) {
 
 export async function detect_collapse_all_entities(target,entities)
 {
+    let collapsed = [];
+
     for (let i = 0; i < entities.length; i++)
     {
         if (entities[i].id!= target.id && entities[i].type != 'world' && entities[i].collision_active && await detect_collapse(target, entities[i]))
         {
-            return {direction : await detect_collapse(target,entities[i]), entitie : entities[i]};
+            collapsed.push({direction : await detect_collapse(target,entities[i]), entitie : entities[i]});
         }
     }
 
-    return false
+    if(collapsed.length>0) return collapsed;
+    else return false;
+
 }

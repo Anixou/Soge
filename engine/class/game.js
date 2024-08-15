@@ -1,5 +1,11 @@
 export default class Game {
 
+    constructor()
+    {
+        this.win = false;
+        this.lose = false;
+    }
+
     async add_frame(heigth = "100vh",width = "100%"){
 
         const frame = document.createElement("div");

@@ -1,17 +1,30 @@
 "use strict";
 
-import { detect_collapse,detect_collapse_all_entities, fix_collision, gravity, immobilise, move_test } from "../movement.js";
-import { render_movement } from "../movement.js";
-import { check_collision_all_entities } from "../movement.js";
-import move from "../movement.js";
+import { detect_collapse,detect_collapse_all_entities, fix_collision, gravity, immobilise, move_test } from "../modele/movement.js";
+import { render_movement } from "../modele/movement.js";
+import { check_collision_all_entities } from "../modele/movement.js";
+import move from "../modele/movement.js";
 
 export default class Player {
 
-    constructor(id, x = 0, y = 0) {
+    constructor(id, x = 0, y = 0,x_mesure = 'px', y_mesure = 'px') {
+
+        if (x_mesure === '%') {
+            this.x = Math.floor(x * window.innerWidth / 100);
+        }
+        else {
+            this.x = x;
+        }
+
+        if (y_mesure === '%') {
+            this.y = Math.floor(y * window.innerHeight / 100);
+        }
+        else {
+            
+            this.y = y;
+        }
         this.id = id;
         this.alive = true;
-        this.x = x;
-        this.y = y;
         this.is_jumping = false;
         this.is_falling = false;
         this.collision_active = false;
@@ -25,7 +38,7 @@ export default class Player {
         this.immobilise_time = 50;
         this.collision_exceptions = [];
 
-        window.globalVar.push(this)
+        globalVar.push(this)
     }
 
     async save() {
@@ -33,13 +46,28 @@ export default class Player {
     }
 
     //créer l'élément HTML du joueur
-    async create_element(height=50,width=50,id,color='red') {
+    async create_element(height=50,width=50,id,color='red',height_mesure = 'px', width_mesure = 'px') {
 
-        this.width = width;
-        this.height = height;
+        if (height_mesure === '%')
+        {
+            this.height = Math.floor(height * window.innerHeight / 100);
+        }
+        else 
+        {
+            this.height = height;
+        }
 
-        this.width_co = this.x + width-1;
-        this.height_co = this.y + height-1;
+        if (width_mesure === '%')
+        {
+            this.width = Math.floor(width * window.innerWidth / 100);
+        }
+        else
+        {
+            this.width = width;
+        }
+
+        this.width_co = this.x + this.width-1;
+        this.height_co = this.y + this.height-1;
 
         this.css_id = id;
         this.color = color;
@@ -111,7 +139,12 @@ export default class Player {
                     
                 }
     
-                if(key_pressed.right && !this.immobilised && await detect_collapse_all_entities(this, globalVar) !== 'right'){
+                if(key_pressed.right && !this.immobilised){
+
+                    let collapse_test =  await detect_collapse_all_entities(this, globalVar);
+
+                    if (collapse_test && collapse_test.some(e => e.direction === 'right'))
+                        return;
                     
                     if (this.direction === "right" && this.is_mooving)
                     {
@@ -184,7 +217,12 @@ export default class Player {
                         
                 } 
     
-                if(key_pressed.left && !this.immobilised && await detect_collapse_all_entities(this, globalVar) !== 'left'){
+                if(key_pressed.left && !this.immobilised){
+
+                    let collapse_test =  await detect_collapse_all_entities(this, globalVar);
+
+                    if (collapse_test && collapse_test.some(e => e.direction === 'left'))
+                        return;
     
                     if (this.direction === "left" && this.is_mooving)
                     {
@@ -282,16 +320,24 @@ export default class Player {
     async active_collision(){
         this.collision_active = setInterval( async () => {
             const collapse = await detect_collapse_all_entities(this,globalVar);
-            if (collapse.direction === 'right')
+
+            if (collapse)
             {
-                this.x = collapse.entitie.x-this.width;
-                this.width_co = this.x + this.width-1;
+                let collapse_right = collapse.find(e => {if(e.direction === 'right') return e})
+                let collapse_left = collapse.find(e => {if(e.direction === 'left') return e})
+
+                if (collapse_right)
+                {
+                    this.x = collapse_right.entitie.x-this.width;
+                    this.width_co = this.x + this.width-1;
+                }
+                if (collapse_left)
+                {
+                    this.x = collapse_left.entitie.width_co+1;
+                    this.width_co = this.x + this.width-1;
+                }
             }
-            if (collapse.direction === 'left')
-            {
-                this.x = collapse.entitie.width_co+1;
-                this.width_co = this.x + this.width-1;
-            }
+            
             
             this.save();
         }, 10);
@@ -369,68 +415,74 @@ export default class Player {
         this.gravity_active = false;
     }
 
-    async set_jump(height,speed){
+    async jump()
+    {
 
         let entities = globalVar
+
+        const progress_max = 0.95;
+        const start_point = this.y
+
+        this.is_jumping = true;
+        this.jump_point = start_point + this.jump_height;
+        
+
+
+        let jump = setInterval(async () => {
+
+            this.is_mooving = true;
+            
+            if (this.y >= this.jump_point)
+            {
+                this.y = this.jump_point;
+                entities[entities.findIndex((e)=>e.id === this.id)] = this;
+
+                this.is_jumping = false;
+                this.is_falling = true;
+                clearInterval(jump);
+            }
+
+            
+            let progress = (this.y-start_point) / this.jump_height < progress_max ? (this.y-start_point) / this.jump_height : progress_max;
+            
+            this.jump_speed = this.jump_initial_speed * (1 - progress);
+            
+            await move_test('up', this, this.jump_speed);
+
+            if (this.collision_active)
+            {
+                let collision = await check_collision_all_entities(this, entities);
+
+                if(collision){
+                    
+                    await move_test('down', this, this.jump_speed);
+                    await fix_collision(this, entities, 'up');
+                    entities[entities.findIndex((e)=>e.id === this.id)] = this;
+                    this.is_jumping = false;
+                    this.is_falling = true;
+                    clearInterval(jump);
+                }
+
+            }
+            
+            entities[entities.findIndex((e)=>e.id === this.id)] = this;
+
+        },10)
+    }
+
+    async set_jump(height,speed){
+
         this.jump_height = height;
         this.jump_speed = speed;
         this.jump_initial_speed = speed;
 
         addEventListener('keydown', (e => {
-            if (e.key === " " && !this.is_jumping && !this.is_falling) {
+            
+            if (e.key === " " && !this.is_jumping && !this.is_falling && this.alive) {
 
-                const progress_max = 0.95;
-                const start_point = this.y
-
-                this.is_jumping = true;
-                this.jump_point = start_point + this.jump_height;
-                
-
-
-                let jump = setInterval(async () => {
-
-                    this.is_mooving = true;
-                    
-                    if (this.y >= this.jump_point)
-                    {
-                        this.y = this.jump_point;
-                        entities[entities.findIndex((e)=>e.id === this.id)] = this;
-
-                        this.is_jumping = false;
-                        this.is_falling = true;
-                        clearInterval(jump);
-                    }
-
-                    
-                    let progress = (this.y-start_point) / this.jump_height < progress_max ? (this.y-start_point) / this.jump_height : progress_max;
-                    
-                    this.jump_speed = this.jump_initial_speed * (1 - progress);
-                    
-                    await move_test('up', this, this.jump_speed);
-
-                    if (this.collision_active)
-                    {
-                        let collision = await check_collision_all_entities(this, entities);
-    
-                        if(collision){
-                            
-                            await move_test('down', this, this.jump_speed);
-                            await fix_collision(this, entities, 'up');
-                            entities[entities.findIndex((e)=>e.id === this.id)] = this;
-                            this.is_jumping = false;
-                            this.is_falling = true;
-                            clearInterval(jump);
-                        }
-    
-                    }
-                    
-                    entities[entities.findIndex((e)=>e.id === this.id)] = this;
-
-                },10)
+                this.jump()
             }
         }))
-
-
     }
 
     async die(){
