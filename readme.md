@@ -12,8 +12,10 @@ Some tips:
 
 - Remember to clear your intervals at the end of a level. Intervals created by Soge can be cleared individually via specific functions (e.g., player.clear_gravity). They can also be cleared using the .die() function, which removes all intervals for an entity. More generally, game.clear_frame() will clear all intervals for all entities.
 
-- The minimum gravity of a player must be greater than 1.
-
 - If you want to create a moving platform for the player, make sure that the downward speed of the platform is less than the player's minimum gravity.
 
 - Feel free to add any properties and/or functions necessary for your game.
+
+- You can easily manage coordinates in percentage instead of pixels to make your game adaptable to all screen sizes (see the documentation for the Player class).
+
+For any questions or comments, please contact: anis.chara94@gmail.com
