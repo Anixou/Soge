@@ -129,7 +129,7 @@ export default class Player {
                 const player_box = document.getElementById(this.css_id);
                 player_box.remove();
 
-            } catch (e) {reject()}
+            } catch (e) {}
 
             this.unset_movement_rendering();
             resolve();
@@ -430,10 +430,10 @@ export default class Player {
      * Activates gravity effects on the player.
      * @async
      * @param {number} force_max - The maximum force of gravity.
-     * @param {number} force_min - The minimum force of gravity.
+     * @param {number} [force_min=1] force_min - The minimum force of gravity. Must be greater than 1.
      * @returns {Promise<void>}
      */
-    async active_gravity(force_max,force_min){
+    async active_gravity(force_max,force_min = 1){
 
         let entities = globalVar
         this.gravity_force_max = force_max;
@@ -599,6 +599,10 @@ export default class Player {
         return new Promise(async (resolve, reject) => {
         let entities = globalVar;
         this.alive = false;
+        this.x = -999;
+        this.y = -999;
+        this.width_co = this.x + this.width-1;
+        this.height_co = this.y + this.height-1;
         await this.unset_movement();
         await this.unset_movement_rendering();
         await this.unset_collision();

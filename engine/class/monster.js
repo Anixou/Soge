@@ -69,6 +69,10 @@ export default class Monster extends Player
     async die(){
         let entities = globalVar;
         this.alive = false;
+        this.x = -999;
+        this.y = -999;
+        this.width_co = this.x + this.width-1;
+        this.height_co = this.y + this.height-1;
         this.unset_movement_rendering();
         this.unset_collision();
         this.remove_element();

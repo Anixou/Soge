@@ -124,6 +124,9 @@ export default async function level2(game)
         else if ((await detect_collapse(monster, structure_blue)=== 'up' && monster.y < 1 && structure_blue.direction === 'down'))
         {
             monster.die();
+            player.apanyan = false;
+            console.log(player.apanyan);
+            
         }
 
     },10)
