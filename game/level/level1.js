@@ -60,7 +60,7 @@ export default async function level1(game)
     await structure_pink.render_movement();
     await structure_pink.active_collision();
 
-    let finish = new Structure(5,95,600,'%');
+    let finish = new Structure(5,95,100,'%');
     await finish.create_element(structure_param.height,3,'yellow','yellow',null,'%');
     await finish.render_movement();
     await finish.active_collision();
@@ -71,6 +71,7 @@ export default async function level1(game)
         {
             game.win = true;
             clearInterval(win);
+            return;
         }
     },10)
 

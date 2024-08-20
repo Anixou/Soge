@@ -51,7 +51,7 @@ export default async function level2(game)
 
     let player = await init_player(player_param);
 
-    let structure_blue = new Structure(structure_param.id,structure_param.x,structure_param.y,"%");
+    let structure_blue = new Structure(structure_param.id,structure_param.x,60,"%");
     await structure_blue.create_element(structure_param.height,structure_param.width,structure_param.css_id,structure_param.color,"px","%");
     await structure_blue.render_movement();
     await structure_blue.active_collision();
@@ -73,24 +73,15 @@ export default async function level2(game)
     await monster.active_collision();
     await monster.active_gravity(monster_param.gravity_max,monster_param.gravity_min);
     
-    await monster.track_player(player,monster_param.speed);
+    // await monster.track_player(player,monster_param.speed);
+//TOFIX track
+    // let move = setInterval(async ()=> {
 
+    //     if (structure_blue.is_mooving) return; 
+    //     if (structure_blue.y === 0) await structure_blue.move(200,1,'up')
+    //     else if (structure_blue.y === 200) await structure_blue.move(200,1,'down')
 
-
-    structure_blue.move(200,1,'down');
-        setTimeout(()=>{
-            structure_blue.move(200,1,'up');
-        },3000)
-
-    setInterval( ()=>{
-        
-        structure_blue.move(200,1,'down');
-        setTimeout(()=>{
-            structure_blue.move(200,1,'up');
-        },3000)
-
-
-    },6000)
+    // },100)
 
 
 
@@ -100,14 +91,27 @@ export default async function level2(game)
         if (await detect_collapse(player, finish) === 'down')
         {
             game.win = true;
+            clearInterval(move);
             clearInterval(result);
+            return;
+
         }
-        else if (await detect_collapse(player, monster) || await detect_collapse(player, structure_blue)=== 'up')
+        else if (await detect_collapse(player, monster) || (await detect_collapse(player, structure_blue)=== 'up' && player.y < 1))
         {
-            game.lose = true;
-            player.die()
-            clearInterval(result);
+            console.log(player, structure_blue)
+            await player.die();
+            alert('VOUS AVEZ PÉRI');
+            player = await init_player(player_param);
+            return;
+
         }
 
     },10)
+
+    addEventListener('keydown', (event)=>{
+        if(event.key === 't'){
+            console.log(new Date(),globalVar);
+            
+        }
+    })
 }

@@ -9,6 +9,8 @@ await game.set_entities_list();
 let level = 1;
 
 level1(game);
+alert("Objecitf : atteindre le bloc jaune");
+
 setInterval(async () => {
     if (game.win) {
         game.win = false;
@@ -20,17 +22,7 @@ setInterval(async () => {
         level++;
 
         await game.clear_frame();
-        await game.set_entities_list();
         if (level === 2) level2(game);
-    }
-    if (game.lose) {
-        game.lose = false;
-        alert("You lose!");
-        await game.clear_frame();
-        await game.set_entities_list();
-        if (level === 2) level2(game);
-        else level1(game);
-        return;
     }
 
 }, 10);

@@ -88,13 +88,20 @@ export default class Player {
 
     async remove_element() {//A REVOIR
 
-        try {
+        new Promise((resolve, reject) => {
+            try {
 
-            const player_box = document.getElementById(this.css_id);
-            player_box.remove();
-        } catch (e) {}
+                const player_box = document.getElementById(this.css_id);
+                player_box.remove();
+
+            } catch (e) {reject()}
+
+            this.unset_movement_rendering();
+            resolve();
+
+        })
         
-        this.unset_movement_rendering()
+        
         
     }
 
@@ -183,7 +190,7 @@ export default class Player {
                                 if(collision){
                                     
                                     await move_test('left', this, temp_speed);
-                                    await fix_collision(this, entities, 'right');
+                                    await fix_collision(this, entities, 'right',this.speed);
     
                                 }
     
@@ -202,7 +209,7 @@ export default class Player {
                             if(collision){
                                 
                                 await move('left', this);
-                                await fix_collision(this, entities, 'right');
+                                await fix_collision(this, entities, 'right',this.speed);
         
                             }
         
@@ -262,7 +269,7 @@ export default class Player {
                                 if(collision){
                                     
                                     await move_test('right', this, temp_speed);
-                                    await fix_collision(this, entities, 'left');
+                                    await fix_collision(this, entities, 'left',this.speed);
     
                                 }
     
@@ -281,7 +288,7 @@ export default class Player {
                             if(collision){
                                 
                                 await move('right', this);
-                                await fix_collision(this, entities, 'left');
+                                await fix_collision(this, entities, 'left',this.speed);
     
                             }
                         }
@@ -369,7 +376,7 @@ export default class Player {
                 {
                     let collision = await check_collision_all_entities(this, entities);
 
-                    if(collision){
+                    if(collision && await detect_collapse(this, collision) === 'down'){
                         
                         this.y = collision.height_co+1;
                         this.height_co = this.y + this.height-1;
@@ -456,7 +463,7 @@ export default class Player {
                 if(collision){
                     
                     await move_test('down', this, this.jump_speed);
-                    await fix_collision(this, entities, 'up');
+                    await fix_collision(this, entities, 'up', this.jump_speed);
                     entities[entities.findIndex((e)=>e.id === this.id)] = this;
                     this.is_jumping = false;
                     this.is_falling = true;
@@ -487,15 +494,19 @@ export default class Player {
 
     async die(){
 
+        return new Promise(async (resolve, reject) => {
         let entities = globalVar;
         this.alive = false;
-        this.unset_movement();
-        this.unset_movement_rendering();
-        this.unset_collision();
-        this.remove_element();
-        this.clear_gravity();
+        await this.unset_movement();
+        await this.unset_movement_rendering();
+        await this.unset_collision();
+        await this.remove_element();
+        await this.clear_gravity();
         let index = entities.findIndex((e)=>e.id === this.id)
         if (index !== -1) entities.splice(index, 1);
+            
+        resolve();
+    })
     }
 
     // async check_life(){

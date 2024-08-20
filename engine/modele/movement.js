@@ -80,7 +80,7 @@ export async function check_collision_all_entities(target,entities)
 }
 
 //correction de la collision entre un element et tous les autres elements
-export async function fix_collision(target, entities, direction) {
+export async function fix_collision(target, entities, direction,speed_context) {
     let opposite;
 
     if (direction === 'right') opposite = 'left';
@@ -88,7 +88,7 @@ export async function fix_collision(target, entities, direction) {
     if (direction === 'up') opposite = 'down';
     if (direction === 'down') opposite = 'up';
 
-    for (let speed = 1; speed <= target.speed; speed++) {
+    for (let speed = 1; speed <= speed_context; speed++) {
         
         await move_test(direction, target);
         const collision = await check_collision_all_entities(target, entities);
@@ -108,6 +108,7 @@ export async function fix_collision(target, entities, direction) {
 export async function gravity(entitie, force){
 
     entitie.y -= force;
+    entitie.height_co = entitie.y +entitie.height-1
     
 }
 
@@ -139,7 +140,10 @@ export async function detect_collapse(target, entitie) {
 
         if (smallestOverlap === overlapLeft) return "left";
         if (smallestOverlap === overlapRight) return "right";
-        if (smallestOverlap === overlapTop) return "up";
+        if (smallestOverlap === overlapTop) {console.log(target,entitie);return "up";
+            
+            
+        }
         if (smallestOverlap === overlapBottom) return "down";
     }
 
