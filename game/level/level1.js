@@ -1,7 +1,5 @@
 import Player from "../../engine/class/player.js";
-import Game from "../../engine/class/game.js";
 import Structure from "../../engine/class/structure.js";
-import Monster from "../../engine/class/monster.js";
 import { detect_collapse } from "../../engine/modele/movement.js";
 
 export default async function level1(game)
@@ -60,7 +58,7 @@ export default async function level1(game)
     await structure_pink.render_movement();
     await structure_pink.active_collision();
 
-    let finish = new Structure(5,95,100,'%');
+    let finish = new Structure(5,95,670,'%');
     await finish.create_element(structure_param.height,3,'yellow','yellow',null,'%');
     await finish.render_movement();
     await finish.active_collision();

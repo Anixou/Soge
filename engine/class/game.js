@@ -31,6 +31,7 @@ export default class Game {
         this.entities = [{
             id: "border_down",
             type : "world",
+            alive : true,
             x: 0,
             y: -1,
             width_co: Infinity,
@@ -39,6 +40,7 @@ export default class Game {
         },{
             id: "border_up",
             type : "world",
+            alive : true,
             x: 0,
             y: window.innerHeight+1,
             width_co: Infinity,
@@ -47,6 +49,7 @@ export default class Game {
         },{
             id: "border_left",
             type : "world",
+            alive : true,
             x: -Infinity,
             y: 0,
             width_co: -1,
@@ -55,6 +58,7 @@ export default class Game {
         },{
             id: "border_right",
             type : "world",
+            alive : true,
             x: window.innerWidth+1,
             y: 0,
             width_co: Infinity,

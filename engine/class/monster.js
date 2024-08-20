@@ -43,6 +43,7 @@ export default class Monster extends Player
         this.unset_collision();
         this.remove_element();
         this.clear_gravity();
+        if(this.track)this.untrack_player();
         let index = entities.findIndex((e)=>e.id === this.id)
         if (index !== -1) entities.splice(index, 1);
     }
@@ -71,21 +72,27 @@ export default class Monster extends Player
         },10)
     }
 
-    async #detect_player(target)
+    async #detect_player(target,level)
     {
+        let smallestOverlap;
+
+        // const overlapBottom = target.height_co - this.y;
         const overlapRight = this.width_co - target.x;
         const overlapLeft = target.width_co - this.x;
-        const overlapTop = this.height_co - target.y;
-        const overlapBottom = target.height_co - this.y;
+        if (level === 1)
+        {
+            const overlapTop = this.height_co - target.y;
 
-        const smallestOverlap = Math.min(overlapLeft, overlapRight, overlapTop, overlapBottom);
+            smallestOverlap = Math.min(overlapLeft, overlapRight, overlapTop);
+        }
+        else if(level === 2) smallestOverlap = Math.min(overlapLeft, overlapRight);
+        
         
         if (smallestOverlap === overlapLeft) return "left";
         if (smallestOverlap === overlapRight) return "right";
         if (smallestOverlap === overlapTop) return "up";
-        if (smallestOverlap === overlapBottom) return "down";
     }
-    async track_player(target,speed)
+    async track_player(target,speed,level)
     {
 
         this.track = setInterval(async ()=>{
@@ -95,7 +102,7 @@ export default class Monster extends Player
                 return;
             }
 
-            let direction = await this.#detect_player(target)
+            let direction = await this.#detect_player(target,level)
             
             if (direction === 'left' || direction === 'right')move_test(direction,this,speed);
 

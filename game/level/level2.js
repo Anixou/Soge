@@ -3,9 +3,10 @@ import Monster from "../../engine/class/monster.js";
 import { detect_collapse } from "../../engine/modele/movement.js";
 import init_player from "../../engine/modele/init_player.js";
 
-let win;
 export default async function level2(game)
 {
+
+    const difficulty = 2;
 
     const player_param = {
         x:200,
@@ -19,9 +20,9 @@ export default async function level2(game)
         color:'red',
         css_id:'player',
         gravity_max:20,
-        gravity_min:1,
+        gravity_min:2,
         jump_speed:50,
-        jump_height: 200
+        jump_height: 250
     }
 
     const structure_param = {
@@ -38,7 +39,7 @@ export default async function level2(game)
 
     const monster_param = {
         x:30,
-        y:0,
+        y:800,
         id:6,
         width:50,
         height:50,
@@ -51,7 +52,7 @@ export default async function level2(game)
 
     let player = await init_player(player_param);
 
-    let structure_blue = new Structure(structure_param.id,structure_param.x,60,"%");
+    let structure_blue = new Structure(structure_param.id,structure_param.x,structure_param.y,"%");
     await structure_blue.create_element(structure_param.height,structure_param.width,structure_param.css_id,structure_param.color,"px","%");
     await structure_blue.render_movement();
     await structure_blue.active_collision();
@@ -67,21 +68,28 @@ export default async function level2(game)
     await finish.render_movement();
     await finish.active_collision();
 
-    let monster = new Monster(monster_param.id,monster_param.x,800,'%');
+    let monster = new Monster(monster_param.id,monster_param.x,monster_param.y,'%');
     await monster.create_element(monster_param.height,monster_param.width,monster_param.css_id,monster_param.color);
     await monster.render_movement();
     await monster.active_collision();
     await monster.active_gravity(monster_param.gravity_max,monster_param.gravity_min);
     
-    // await monster.track_player(player,monster_param.speed);
-//TOFIX track
-    // let move = setInterval(async ()=> {
+    await monster.track_player(player,monster_param.speed,difficulty);
 
-    //     if (structure_blue.is_mooving) return; 
-    //     if (structure_blue.y === 0) await structure_blue.move(200,1,'up')
-    //     else if (structure_blue.y === 200) await structure_blue.move(200,1,'down')
+    let move = setInterval(async ()=> {
 
-    // },100)
+        if (structure_blue.is_mooving) return; 
+        if (structure_blue.y === 0)
+        {
+            await structure_blue.move(200,1,'up');
+            structure_blue.direction = 'up';
+        }
+        else if (structure_blue.y === 200)
+        {
+            await structure_blue.move(200,1,'down')// pour que le joueur.y depende de la strcture la vitesse de deplacement doit etre inferieur a joueur.gravity_min
+            structure_blue.direction = 'down';
+        }
+    },100)
 
 
 
@@ -96,22 +104,28 @@ export default async function level2(game)
             return;
 
         }
-        else if (await detect_collapse(player, monster) || (await detect_collapse(player, structure_blue)=== 'up' && player.y < 1))
+        else if (await detect_collapse(player, monster) || (await detect_collapse(player, structure_blue)=== 'up' && player.y < 1 && structure_blue.direction === 'down'))
         {
-            console.log(player, structure_blue)
             await player.die();
+            await monster.untrack_player(player);
             alert('VOUS AVEZ PÉRI');
             player = await init_player(player_param);
+            monster.die();
+            monster = new Monster(monster_param.id,monster_param.x,monster_param.y,'%');
+            await monster.create_element(monster_param.height,monster_param.width,monster_param.css_id,monster_param.color);
+            await monster.render_movement();
+            await monster.active_collision();
+            await monster.active_gravity(monster_param.gravity_max,monster_param.gravity_min);
+            await monster.track_player(player,monster_param.speed,difficulty);
+
             return;
 
+        }
+        else if ((await detect_collapse(monster, structure_blue)=== 'up' && monster.y < 1 && structure_blue.direction === 'down'))
+        {
+            monster.die();
         }
 
     },10)
 
-    addEventListener('keydown', (event)=>{
-        if(event.key === 't'){
-            console.log(new Date(),globalVar);
-            
-        }
-    })
 }

@@ -6,23 +6,32 @@ let game = new Game();
 await game.add_frame();
 await game.set_entities_list(); 
 
+const levels = {"1" : level1, "2" : level2};
 let level = 1;
+const level_max = 2;
+alert("Objecitf : Monter sur le bloc jaune");
 
-level1(game);
-alert("Objecitf : atteindre le bloc jaune");
+
+levels[level](game);
 
 setInterval(async () => {
+
     if (game.win) {
+
         game.win = false;
-        if (level === 2) {
+
+        if (level === level_max) {
+
             alert("You win!");
             location.reload();
             return;
         }
+
         level++;
+        alert("bravo!");
 
         await game.clear_frame();
-        if (level === 2) level2(game);
+        levels[level](game);
     }
 
 }, 10);

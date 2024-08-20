@@ -61,7 +61,7 @@ export function render_movement(target){
 //verification de la collision entre deux elements
 export async function check_collision(target, entitie){
 
-    if (target.x > entitie.width_co || target.y > entitie.height_co || target.width_co < entitie.x || target.height_co < entitie.y || !entitie.collision_active)
+    if (target.x > entitie.width_co || target.y > entitie.height_co || target.width_co < entitie.x || target.height_co < entitie.y || !entitie.collision_active || !entitie.alive)
         return false;
     else return true;
 
@@ -124,10 +124,10 @@ export async function immobilise(target,time)
 
 export async function detect_collapse(target, entitie) {
     // Vérification de la collision sur l'axe X
-    const collisionX = target.x <= entitie.width_co+1 && target.width_co >= entitie.x-1;
+    const collisionX = target.x <= entitie.width_co+1 && target.width_co >= entitie.x-1 && entitie.alive;
 
     // Vérification de la collision sur l'axe Y
-    const collisionY = target.y <= entitie.height_co+1 && target.height_co >= entitie.y-1;
+    const collisionY = target.y <= entitie.height_co+1 && target.height_co >= entitie.y-1 && entitie.alive;
 
     if (collisionX && collisionY) {
         // Déterminer le côté de la collision
@@ -140,10 +140,7 @@ export async function detect_collapse(target, entitie) {
 
         if (smallestOverlap === overlapLeft) return "left";
         if (smallestOverlap === overlapRight) return "right";
-        if (smallestOverlap === overlapTop) {console.log(target,entitie);return "up";
-            
-            
-        }
+        if (smallestOverlap === overlapTop) return "up";
         if (smallestOverlap === overlapBottom) return "down";
     }
 

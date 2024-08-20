@@ -27,6 +27,7 @@ export default class Player {
         this.alive = true;
         this.is_jumping = false;
         this.is_falling = false;
+        this.may_fall = false;
         this.collision_active = false;
         this.movement_rendering = false;
         this.movable = false;
@@ -200,14 +201,14 @@ export default class Player {
                     
                     else {
     
-                        await move('right', this)
+                        await move('right', this);
+                        
     
                         if (this.collision_active)
                         {
                             let collision = await check_collision_all_entities(this, entities);
         
-                            if(collision){
-                                
+                            if(collision && await detect_collapse(this, collision) === 'right'){
                                 await move('left', this);
                                 await fix_collision(this, entities, 'right',this.speed);
         
@@ -285,7 +286,7 @@ export default class Player {
                         {
                             let collision = await check_collision_all_entities(this, entities)
     
-                            if(collision){
+                            if(collision && await detect_collapse(this, collision) === 'left'){
                                 
                                 await move('right', this);
                                 await fix_collision(this, entities, 'left',this.speed);
@@ -332,6 +333,7 @@ export default class Player {
             {
                 let collapse_right = collapse.find(e => {if(e.direction === 'right') return e})
                 let collapse_left = collapse.find(e => {if(e.direction === 'left') return e})
+                let collapse_down = collapse.find(e => {if(e.direction === 'down') return e})
 
                 if (collapse_right)
                 {
@@ -342,6 +344,11 @@ export default class Player {
                 {
                     this.x = collapse_left.entitie.width_co+1;
                     this.width_co = this.x + this.width-1;
+                }
+                if (collapse_down)
+                {
+                this.y = collapse_down.entitie.y+collapse_down.entitie.height;
+                this.height_co = this.y + this.height-1;
                 }
             }
             
@@ -371,6 +378,7 @@ export default class Player {
                 
                 await gravity(this, this.gravity_force);
                 
+                
 
                 if (this.collision_active)
                 {
@@ -381,21 +389,23 @@ export default class Player {
                         this.y = collision.height_co+1;
                         this.height_co = this.y + this.height-1;
                         
-                        if (this.immobilise_on_fall)
+                        if (this.immobilise_on_fall && this.gravity_force >= this.gravity_force_max/4)
                         {
                             if(this.is_falling)await immobilise(this,this.immobilise_time);
                         }
                         // await move_test('up', this, this.gravity_force);
                         // await fix_collision(this, entities, 'down');
                         this.is_falling = false;
+                        this.may_fall = false;
                         this.gravity_force = this.gravity_force_min;
                     }
                     else {
         
-                        this.is_falling = true;
+                        if(this.may_fall)this.is_falling = true;
+                        else this.may_fall = true;
                         this.is_mooving = true;
                         this.gravity_force+= this.gravity_acceleration;
-
+                        
                         if(this.gravity_force > this.gravity_force_max) this.gravity_force = this.gravity_force_max;
 
                     }
@@ -524,10 +534,22 @@ export default class Player {
 
     }
 
-    async teleport(x,y){
+    async teleport(x,y,x_mesure = 'px', y_mesure = 'px'){
 
-        this.x = x;
-        this.y = y;
+        if (x_mesure === '%') {
+            this.x = Math.floor(x * window.innerWidth / 100);
+        }
+        else {
+            this.x = x;
+        }
+
+        if (y_mesure === '%') {
+            this.y = Math.floor(y * window.innerHeight / 100);
+        }
+        else {
+            
+            this.y = y;
+        }
 
         this.width_co = this.x + this.width-1;
         this.height_co = this.y + this.height-1;
