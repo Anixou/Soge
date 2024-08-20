@@ -1,5 +1,9 @@
 import Player from "../class/player.js";
 
+/**
+ * Asimplify way to initializes a new player with the given parameters.
+ * @param {Object} player_param - The parameters used to configure the player.
+ */
 export default async function init_player(player_param)
 {
     let player = new Player(player_param.id,player_param.x,player_param.y);

@@ -5,7 +5,21 @@ import { render_movement } from "../modele/movement.js";
 import { check_collision_all_entities } from "../modele/movement.js";
 import move from "../modele/movement.js";
 
+/**
+ * @class Player
+ * @classdesc Represents a player in the game. Handles the player's properties, movements, collisions, and other actions.
+ */
+
 export default class Player {
+
+    /**
+     * Creates an instance of Player.
+     * @param {string | number} id - The unique identifier for the player.
+     * @param {number} [x=0] - The initial x-coordinate position.
+     * @param {number} [y=0] - The initial y-coordinate position.
+     * @param {string} [x_mesure='px'] - The unit of measurement for the x-coordinate ('px' or '%').
+     * @param {string} [y_mesure='px'] - The unit of measurement for the y-coordinate ('px' or '%').
+     */
 
     constructor(id, x = 0, y = 0,x_mesure = 'px', y_mesure = 'px') {
 
@@ -42,11 +56,26 @@ export default class Player {
         globalVar.push(this)
     }
 
+    /**
+     * Saves the current state of the player in the global variables.
+     * @async
+     * @returns {Promise<void>}
+     */
     async save() {
         globalVar[globalVar.findIndex((e)=>e.id === this.id)] = this;
     }
 
-    //créer l'élément HTML du joueur
+    /**
+     * Creates the player's HTML element and appends it to the DOM.
+     * @async
+     * @param {number} [height=50] - The height of the player's element.
+     * @param {number} [width=50] - The width of the player's element.
+     * @param {string} id - The HTML id for the player's element.
+     * @param {string} [color='red'] - The color of the player's element.
+     * @param {string} [height_mesure='px'] - The unit for the height ('px' or '%').
+     * @param {string} [width_mesure='px'] - The unit for the width ('px' or '%').
+     * @returns {Promise<void>}
+     */
     async create_element(height=50,width=50,id,color='red',height_mesure = 'px', width_mesure = 'px') {
 
         if (height_mesure === '%')
@@ -87,6 +116,11 @@ export default class Player {
         frame.append(player_box);
     }
 
+    /**
+     * Removes the player's HTML element from the DOM.
+     * @async
+     * @returns {Promise<void>}
+     */
     async remove_element() {//A REVOIR
 
         new Promise((resolve, reject) => {
@@ -106,6 +140,14 @@ export default class Player {
         
     }
 
+    /**
+     * Activates the player's movement and handles keypress events for movement control.
+     * @async
+     * @param {number} speed_min - The minimum speed of the player.
+     * @param {number} speed_max - The maximum speed of the player.
+     * @param {number} [time_for_max_speed=1000] - Time in milliseconds to reach maximum speed.
+     * @returns {Promise<void>}
+     */
     //active les mouvements du joueur, gere l'event listener et la collision
     async set_movement(speed_min,speed_max,time_for_max_speed = 1000){
         
@@ -304,14 +346,22 @@ export default class Player {
     }
 
 
-    //desactive les mouvements du joueur
+    /**
+     * Deactivates the player's movement.
+     * @async
+     * @returns {Promise<void>}
+     */    
     async unset_movement(){
         clearInterval(this.movable);
         this.movable = false;
     }
 
     
-    //active le rendu visuel des mouvements
+    /**
+     * Activates the visual rendering of the player's movements.
+     * @async
+     * @returns {Promise<void>}
+     */
     async render_movement(){
         this.movement_rendering = setInterval( async () => {
             render_movement(this);
@@ -319,12 +369,21 @@ export default class Player {
         
     }
 
+    /**
+     * Deactivates the visual rendering of the player's movements.
+     * @async
+     * @returns {Promise<void>}
+     */
     async unset_movement_rendering(){
         clearInterval(this.movement_rendering);
         this.movement_rendering = false;
     }
 
-    //Active les collision du joueur
+    /**
+     * Activates collision detection for the player.
+     * @async
+     * @returns {Promise<void>}
+     */
     async active_collision(){
         this.collision_active = setInterval( async () => {
             const collapse = await detect_collapse_all_entities(this,globalVar);
@@ -357,13 +416,23 @@ export default class Player {
         }, 10);
     }
 
-    //desactive les collision du joueur
+    /**
+     * Deactivates collision detection for the player.
+     * @async
+     * @returns {Promise<void>}
+     */
     async unset_collision(){
         clearInterval(this.collision_active);
         this.collision_active = false;
     }
 
-    //Active la gravité du joueur
+    /**
+     * Activates gravity effects on the player.
+     * @async
+     * @param {number} force_max - The maximum force of gravity.
+     * @param {number} force_min - The minimum force of gravity.
+     * @returns {Promise<void>}
+     */
     async active_gravity(force_max,force_min){
 
         let entities = globalVar
@@ -427,12 +496,23 @@ export default class Player {
         },10)
     }
 
+    /**
+     * Deactivates gravity effects on the player.
+     * @async
+     * @returns {Promise<void>}
+     */
     async clear_gravity() {
         clearInterval(this.gravity_active);
         this.gravity_active = false;
     }
 
-    async jump()
+    /**
+     * Makes the player jump with the specified height and speed.
+     * @async
+     *  @private
+     * @returns {Promise<void>}
+     */
+    async #jump()
     {
 
         let entities = globalVar
@@ -487,6 +567,13 @@ export default class Player {
         },10)
     }
 
+    /**
+     * Sets the height and speed for the player's jump.
+     * @async
+     * @param {number} height - The height of the jump.
+     * @param {number} speed - The speed of the jump.
+     * @returns {Promise<void>}
+     */
     async set_jump(height,speed){
 
         this.jump_height = height;
@@ -497,11 +584,16 @@ export default class Player {
             
             if (e.key === " " && !this.is_jumping && !this.is_falling && this.alive) {
 
-                this.jump()
+                this.#jump()
             }
         }))
     }
 
+    /**
+     * Handles the death of the player by deactivating all active states and removing the player from the game.
+     * @async
+     * @returns {Promise<void>}
+     */
     async die(){
 
         return new Promise(async (resolve, reject) => {
@@ -528,12 +620,28 @@ export default class Player {
     //     }, 10);
         
     // }
+
+    /**
+     * Detects and returns the direction of collapse between the player and another entity.
+     * @async
+     * @param {object} entitie - The entity to check for a collision with.
+     * @returns {Promise<string|null>} The direction of collapse or null if no collision.
+     */
     async collapsed(entitie){
 
         return await detect_collapse(this, entitie)
 
     }
 
+    /**
+     * Teleports the player to a new position.
+     * @async
+     * @param {number} x - The x-coordinate to teleport to.
+     * @param {number} y - The y-coordinate to teleport to.
+     * @param {string} [x_mesure='px'] - The unit of measurement for the x-coordinate ('px' or '%').
+     * @param {string} [y_mesure='px'] - The unit of measurement for the y-coordinate ('px' or '%').
+     * @returns {Promise<void>}
+     */
     async teleport(x,y,x_mesure = 'px', y_mesure = 'px'){
 
         if (x_mesure === '%') {
@@ -555,10 +663,23 @@ export default class Player {
         this.height_co = this.y + this.height-1;
     }
 
+    /**
+     * Adds an entity to the list of collision exceptions.
+     * @async
+     * @param {object} exception - The entity to exclude from collisions.
+     * @returns {Promise<void>}
+     */
     async add_collision_exception(exception)
     {
         this.collision_exceptions.push(exception);
     }
+
+    /**
+     * Removes an entity from the list of collision exceptions.
+     * @async
+     * @param {object} exception - The entity to remove from collision exceptions.
+     * @returns {Promise<void>}
+     */
     async remove_collision_exception(exception)
     {
         let index = this.collision_exceptions.indexOf(exception);

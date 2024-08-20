@@ -1,6 +1,14 @@
 "use strict";
 
 //mouvement basique prenant en compte la vitesse du joueur
+
+/**
+ * Moves the target element in the specified direction by its speed.
+ * @param {string} direction - The direction to move ('right', 'left', 'up', or 'down').
+ * @param {Object} target - The target object to be moved.
+ * @returns {Promise<void>} - A promise that resolves when the movement is complete.
+ */
+
 export default async function move(direction,target){
 
     if (direction === 'right')
@@ -25,7 +33,13 @@ export default async function move(direction,target){
 
 }
 
-//mouvement basique sans prendre en compte la vitesse du joueur pour des deplacements controlés
+/**
+ * Moves the target element in the specified direction by a fixed speed.
+ * @param {string} direction - The direction to move ('right', 'left', 'up', or 'down').
+ * @param {Object} target - The target object to be moved.
+ * @returns {Promise<void>} - A promise that resolves when the movement is complete.
+ */
+
 export async function move_test(direction, target, speed = 1){
     
     if (direction === 'right')
@@ -49,7 +63,12 @@ export async function move_test(direction, target, speed = 1){
     target.height_co = target.y + target.height-1;
 }
 
-//mise a jour de la position de l'element dans la page HTML
+/**
+ * Updates the position of the target element in the HTML document.
+ * @param {Object} target - The target object to be rendered.
+ * @returns {void}
+ */
+
 export function render_movement(target){
 
     let element = document.getElementById(target.css_id);
@@ -58,7 +77,13 @@ export function render_movement(target){
     element.style.bottom = target.y+'px';
 }
 
-//verification de la collision entre deux elements
+/**
+ * Checks if there is a collision between the target and another entity.
+ * @param {Object} target - The target object to check for collision.
+ * @param {Object} entitie - The entity object to check for collision.
+ * @returns {Promise<boolean>} - A promise that resolves to `true` if there is a collision, otherwise `false`.
+ */
+
 export async function check_collision(target, entitie){
 
     if (target.x > entitie.width_co || target.y > entitie.height_co || target.width_co < entitie.x || target.height_co < entitie.y || !entitie.collision_active || !entitie.alive)
@@ -67,7 +92,13 @@ export async function check_collision(target, entitie){
 
 }
 
-//verification de la collision entre un element et tous les autres elements
+/**
+ * Checks for collisions between the target and all other entities.
+ * @param {Object} target - The target object to check for collisions.
+ * @param {Array<Object>} entities - The list of all entities to check against.
+ * @returns {Promise<Object|boolean>} - A promise that resolves to the first entity that collides with the target, or `false` if no collision is detected.
+ */
+
 export async function check_collision_all_entities(target,entities)
 {
     
@@ -79,7 +110,15 @@ export async function check_collision_all_entities(target,entities)
     return false;
 }
 
-//correction de la collision entre un element et tous les autres elements
+/**
+ * Corrects a collision by moving the target away from all other entities.
+ * @param {Object} target - The target object to correct collisions for.
+ * @param {Array<Object>} entities - The list of all entities to check against.
+ * @param {string} direction - The direction of the movement causing the collision.
+ * @param {number} speed_context - The maximum speed to use for collision correction.
+ * @returns {Promise<void>} - A promise that resolves when the collision correction is complete.
+ */
+
 export async function fix_collision(target, entities, direction,speed_context) {
     let opposite;
 
@@ -102,15 +141,25 @@ export async function fix_collision(target, entities, direction,speed_context) {
 
 }
 
-// a voir plus tard si la collision inactive peut poser probleme
-
-//gravite du joueur
+/**
+ * Applies gravity to the target, affecting its vertical position.
+ * @param {Object} entitie - The entity to apply gravity to.
+ * @param {number} force - The amount of gravity to apply.
+ * @returns {Promise<void>} - A promise that resolves when gravity has been applied.
+ */
 export async function gravity(entitie, force){
 
     entitie.y -= force;
     entitie.height_co = entitie.y +entitie.height-1
     
 }
+
+/**
+ * Immobilizes the target for a specified amount of time.
+ * @param {Object} target - The target object to immobilize.
+ * @param {number} time - The duration to keep the target immobilized in milliseconds.
+ * @returns {Promise<void>} - A promise that resolves when the immobilization is complete.
+ */
 
 export async function immobilise(target,time)
 {
@@ -121,6 +170,13 @@ export async function immobilise(target,time)
         target.immobilised = false;
     },time)
 }
+
+/**
+ * Detects a collapse between the target and another entity, determining the direction of overlap.
+ * @param {Object} target - The target object to check for collapse.
+ * @param {Object} entitie - The entity object to check against.
+ * @returns {Promise<string|boolean>} - A promise that resolves to the direction of the collapse ("left", "right", "up", "down") or `false` if no collapse is detected.
+ */
 
 export async function detect_collapse(target, entitie) {
     // Vérification de la collision sur l'axe X
@@ -146,6 +202,13 @@ export async function detect_collapse(target, entitie) {
 
     return false; // Pas de collision
 }
+
+/**
+ * Detects collapses between the target and all other entities, returning the direction of each collapse.
+ * @param {Object} target - The target object to check for collapses.
+ * @param {Array<Object>} entities - The list of all entities to check against.
+ * @returns {Promise<Array<Object>|boolean>} - A promise that resolves to an array of objects containing the direction and the entity involved in each collapse, or `false` if no collapses are detected.
+ */
 
 export async function detect_collapse_all_entities(target,entities)
 {
