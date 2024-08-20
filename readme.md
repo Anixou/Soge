@@ -1,20 +1,19 @@
 # Soge 
 
-Soge est un moteur de jeu en javascript permettant de créer des jeux de plateforme en 2D facilement.
+Soge is a JavaScript game engine that makes it easy to create 2D platformer games.
 
-Vous disposerez dans le dossier 'game' d'un exemple d'utilisation que vous pouvez essayer en lançant 'index.html' avec Live Server.
+In the 'game' folder, you will find an example usage that you can try by opening 'index.html' with Live Server.
 
-Quelques conseils : 
+Some tips:
 
-- Lisez la JSdoc des fonctions
+- Read the JSDoc for the functions.
 
-- Penser à activer la collision avant la gravité
+- Remember to activate collision before gravity.
 
-- Penser à clear vos interval à la fin d'un niveau, les intervals créée par Soge peuvent être clear individuellement via des fonctions précises ( ex = player.clear_gravity). Mais aussi via la fonction .die() qui effacera toutes les intervals d'une entité.
-Et plus globalement game.clear_frame() qui effacera toutes les intervals de toutes les entités.
+- Remember to clear your intervals at the end of a level. Intervals created by Soge can be cleared individually via specific functions (e.g., player.clear_gravity). They can also be cleared using the .die() function, which removes all intervals for an entity. More generally, game.clear_frame() will clear all intervals for all entities.
 
-- La gravité minimale d'un joueur doit absolument être supérieure à 1
+- The minimum gravity of a player must be greater than 1.
 
-- Si vous desirez faire une plateforme mouvante pour le joueur, assurez vous que la vitesse en descente de la structure soit inférieure à la gravité minimlale du joueur
+- If you want to create a moving platform for the player, make sure that the downward speed of the platform is less than the player's minimum gravity.
 
-- Libre à vous d'ajouter les propriétés et/ou fonctions nécessaires à votre jeu
+- Feel free to add any properties and/or functions necessary for your game.
